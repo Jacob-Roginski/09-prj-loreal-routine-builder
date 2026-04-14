@@ -243,9 +243,13 @@ async function generateRoutine() {
     });
 
     if (!response.ok) {
-      throw new Error(
-        "Failed to generate routine. Please check your API configuration.",
-      );
+      const errorData = await response.json().catch(() => null);
+      const errorMessage =
+        errorData?.details?.error?.message ||
+        errorData?.details?.message ||
+        errorData?.error ||
+        "Failed to generate routine. Please check your API configuration.";
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
@@ -310,7 +314,13 @@ async function handleChatSubmission(userInput) {
     });
 
     if (!response.ok) {
-      throw new Error("API request failed");
+      const errorData = await response.json().catch(() => null);
+      const errorMessage =
+        errorData?.details?.error?.message ||
+        errorData?.details?.message ||
+        errorData?.error ||
+        "API request failed";
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();

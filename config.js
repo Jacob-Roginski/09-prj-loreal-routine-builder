@@ -8,7 +8,7 @@ const CONFIG = {
   // Replace this with your actual Cloudflare Worker URL
   // Get this URL after deploying the cloudflare-worker.js file
   // Example: https://routine-builder.yourusername.workers.dev/
-  CLOUDFLARE_WORKER_URL: "YOUR_CLOUDFLARE_WORKER_URL_HERE",
+  CLOUDFLARE_WORKER_URL: "https://chatbot.jhrogins305.workers.dev",
 };
 
 // Validate configuration

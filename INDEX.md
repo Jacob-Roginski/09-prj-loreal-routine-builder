@@ -12,6 +12,14 @@ Welcome to the L'Oréal Product-Aware Routine Builder! Here's a guide to all the
 - 3 simple steps to get running
 - Perfect for students who want to go fast
 
+### **CLOUDFLARE_SETUP_2025.md** ⭐ (NEW - MOST IMPORTANT!)
+
+- **Read this if Cloudflare setup is confusing or not working**
+- Modern, up-to-date method (2025-2026)
+- Step-by-step guide matching current Cloudflare interface
+- Troubleshooting section
+- **THIS is the guide if you're stuck on Cloudflare!**
+
 ### **SETUP.md** (Medium Detail)
 
 - Detailed Cloudflare Worker setup
