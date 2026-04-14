@@ -1,23 +1,168 @@
 /* Get references to DOM elements */
 const categoryFilter = document.getElementById("categoryFilter");
+const productSearch = document.getElementById("productSearch");
+const languageSelector = document.getElementById("languageSelector");
+const webSearchToggle = document.getElementById("webSearchToggle");
+const htmlRoot = document.getElementById("htmlRoot");
 const productsContainer = document.getElementById("productsContainer");
 const chatForm = document.getElementById("chatForm");
 const chatWindow = document.getElementById("chatWindow");
 const generateRoutineBtn = document.getElementById("generateRoutine");
+const generateRoutineLabel = document.getElementById("generateRoutineLabel");
 const selectedProductsList = document.getElementById("selectedProductsList");
 const productModal = document.getElementById("productModal");
 const closeModalBtn = document.getElementById("closeModal");
+const siteTitle = document.getElementById("siteTitle");
+const selectedProductsTitle = document.getElementById("selectedProductsTitle");
+const chatTitle = document.getElementById("chatTitle");
 
 /* State management */
 let allProducts = [];
 let selectedProducts = [];
 let conversationHistory = [];
 let currentModalProduct = null;
+let currentCategory = "";
+let currentSearchQuery = "";
+let currentLanguage = localStorage.getItem("selectedLanguage") || "en";
+let currentWebSearchEnabled = false;
+
+const translations = {
+  en: {
+    siteTitle: "Smart Routine & Product Advisor",
+    selectedProductsTitle: "Selected Products",
+    chatTitle: "Let's Build Your Routine",
+    generateRoutineLabel: "Generate Routine",
+    categoryPlaceholder: "Choose a Category",
+    searchPlaceholder: "Search by name or keyword",
+    selectedEmpty:
+      "No products selected yet. Click on a product to add it to your routine.",
+    emptySearch: "No products match your filters.",
+    languageLabel: "English",
+  },
+  ar: {
+    siteTitle: "مساعد الروتين والمنتجات الذكي",
+    selectedProductsTitle: "المنتجات المختارة",
+    chatTitle: "لننشئ روتينك",
+    generateRoutineLabel: "إنشاء الروتين",
+    categoryPlaceholder: "اختر فئة",
+    searchPlaceholder: "ابحث بالاسم أو الكلمة المفتاحية",
+    selectedEmpty: "لم يتم اختيار أي منتج بعد.",
+    emptySearch: "لا توجد منتجات تطابق الفلتر.",
+    languageLabel: "العربية",
+  },
+  he: {
+    siteTitle: "יועץ שגרה ומוצרים חכם",
+    selectedProductsTitle: "מוצרים שנבחרו",
+    chatTitle: "בואו נבנה את השגרה שלך",
+    generateRoutineLabel: "צור שגרה",
+    categoryPlaceholder: "בחר קטגוריה",
+    searchPlaceholder: "חפש לפי שם או מילת מפתח",
+    selectedEmpty: "עדיין לא נבחרו מוצרים.",
+    emptySearch: "לא נמצאו מוצרים שמתאימים לסינון.",
+    languageLabel: "עברית",
+  },
+};
+
+function getLanguageName(language) {
+  if (language === "ar") return "Arabic";
+  if (language === "he") return "Hebrew";
+  return "English";
+}
+
+function buildSystemPrompt() {
+  const languageName = getLanguageName(currentLanguage);
+
+  return `You are a helpful L'Oréal beauty advisor. Stay focused on the selected routine, skincare, haircare, makeup, fragrance, and closely related beauty topics. Use the selected product context exactly as provided. Reply in ${languageName}. Keep answers practical, concise, and useful. If web search is enabled, include current information and cite sources or links when possible.`;
+}
+
+function syncSystemPrompt() {
+  const systemMessage = { role: "system", content: buildSystemPrompt() };
+
+  if (
+    conversationHistory.length === 0 ||
+    conversationHistory[0].role !== "system"
+  ) {
+    conversationHistory.unshift(systemMessage);
+    return;
+  }
+
+  conversationHistory[0] = systemMessage;
+}
+
+function applyLanguage(language) {
+  currentLanguage = language;
+  localStorage.setItem("selectedLanguage", language);
+  htmlRoot.lang = language;
+  htmlRoot.dir = language === "ar" || language === "he" ? "rtl" : "ltr";
+
+  const t = translations[language] || translations.en;
+  siteTitle.textContent = t.siteTitle;
+  selectedProductsTitle.textContent = t.selectedProductsTitle;
+  chatTitle.textContent = t.chatTitle;
+  generateRoutineLabel.textContent = t.generateRoutineLabel;
+  productSearch.placeholder = t.searchPlaceholder;
+  syncSystemPrompt();
+}
+
+function updateCategoryPlaceholder() {
+  const option = categoryFilter.querySelector('option[value=""]');
+  if (option) {
+    option.textContent = translations[currentLanguage].categoryPlaceholder;
+  }
+}
+
+function matchesSearchTerm(product, searchTerm) {
+  if (!searchTerm) return true;
+
+  const haystack = [
+    product.name,
+    product.brand,
+    product.category,
+    product.description,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return haystack.includes(searchTerm);
+}
+
+function renderNoProductsMessage(message) {
+  productsContainer.innerHTML = `
+    <div class="search-empty-state">${message}</div>
+  `;
+}
+
+async function refreshProducts() {
+  const products = await loadProducts();
+  const normalizedSearch = currentSearchQuery.trim().toLowerCase();
+
+  const filteredProducts = products.filter((product) => {
+    const categoryMatch =
+      !currentCategory || product.category === currentCategory;
+    return categoryMatch && matchesSearchTerm(product, normalizedSearch);
+  });
+
+  if (currentCategory === "" && normalizedSearch === "") {
+    productsContainer.innerHTML = `
+      <div class="placeholder-message">
+        Select a category or search for a product to get started.
+      </div>
+    `;
+    return;
+  }
+
+  if (filteredProducts.length === 0) {
+    renderNoProductsMessage(translations[currentLanguage].emptySearch);
+    return;
+  }
+
+  displayProducts(filteredProducts);
+}
 
 /* Show initial placeholder until user selects a category */
 productsContainer.innerHTML = `
   <div class="placeholder-message">
-    Select a category to view products
+    Select a category or search for a product to get started.
   </div>
 `;
 
@@ -147,7 +292,7 @@ function updateUI() {
   /* Update selected products list */
   if (selectedProducts.length === 0) {
     selectedProductsList.innerHTML = `
-      <p style="color: #999; font-style: italic;">No products selected yet. Click on a product to add it to your routine.</p>
+      <p style="color: #999; font-style: italic;">${translations[currentLanguage].selectedEmpty}</p>
     `;
     generateRoutineBtn.disabled = true;
   } else {
@@ -207,7 +352,7 @@ async function generateRoutine() {
   }
 
   generateRoutineBtn.disabled = true;
-  generateRoutineBtn.textContent = "Generating...";
+  generateRoutineLabel.textContent = "Generating...";
 
   try {
     /* Prepare product data for the API */
@@ -219,11 +364,11 @@ async function generateRoutine() {
     }));
 
     /* Create the messages for the API */
-    const userMessage = `I've selected these L'Oréal products: ${selectedProducts
-      .map((p) => p.name)
-      .join(
-        ", ",
-      )}. Please create a personalized skincare and beauty routine using these products. Include morning and evening steps, and any important tips for using them together.`;
+    const userMessage = `I selected these L'Oréal products. Use the JSON data to build a personalized skincare and beauty routine with morning and evening steps, product order, and practical tips. Products JSON:\n${JSON.stringify(
+      productData,
+      null,
+      2,
+    )}`;
 
     conversationHistory.push({
       role: "user",
@@ -231,29 +376,12 @@ async function generateRoutine() {
     });
 
     /* Call Cloudflare Worker or OpenAI API */
-    const response = await fetch(CONFIG.CLOUDFLARE_WORKER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messages: conversationHistory,
-        model: "gpt-4o",
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const errorMessage =
-        errorData?.details?.error?.message ||
-        errorData?.details?.message ||
-        errorData?.error ||
-        "Failed to generate routine. Please check your API configuration.";
-      throw new Error(errorMessage);
-    }
-
-    const data = await response.json();
-    const assistantMessage = data.choices[0].message.content;
+    const data = await sendChatRequest(
+      conversationHistory,
+      currentWebSearchEnabled,
+    );
+    const assistantMessage = data.content;
+    const citations = data.citations || [];
 
     conversationHistory.push({
       role: "assistant",
@@ -261,27 +389,91 @@ async function generateRoutine() {
     });
 
     /* Display the routine in the chat window */
-    displayMessage("assistant", assistantMessage);
+    displayMessage("assistant", assistantMessage, citations);
   } catch (error) {
     console.error("Error generating routine:", error);
     displayMessage(
       "assistant",
-      "Sorry, I couldn't generate your routine. Please make sure your Cloudflare Worker URL is configured correctly. Check the console for details.",
+      error.message ||
+        "Sorry, I couldn't generate your routine. Please check your configuration.",
     );
   } finally {
     generateRoutineBtn.disabled = false;
-    generateRoutineBtn.innerHTML =
-      '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Routine';
+    generateRoutineLabel.textContent =
+      translations[currentLanguage].generateRoutineLabel;
   }
 }
 
 /* Display a message in the chat window */
-function displayMessage(role, content) {
+function displayMessage(role, content, citations = []) {
   const messageDiv = document.createElement("div");
   messageDiv.className = `chat-message ${role}`;
   messageDiv.textContent = content;
+
+  if (citations.length > 0) {
+    const citationList = document.createElement("div");
+    citationList.className = "chat-citations";
+
+    const citationTitle = document.createElement("strong");
+    citationTitle.textContent = "Sources:";
+    citationList.appendChild(citationTitle);
+
+    const list = document.createElement("ul");
+    citations.slice(0, 5).forEach((citation) => {
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = citation.url;
+      link.target = "_blank";
+      link.rel = "noreferrer";
+      link.textContent = citation.title || citation.url;
+      item.appendChild(link);
+      list.appendChild(item);
+    });
+
+    citationList.appendChild(list);
+    messageDiv.appendChild(citationList);
+  }
+
   chatWindow.appendChild(messageDiv);
   chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+async function sendChatRequest(messages, useWebSearch) {
+  const response = await fetch(CONFIG.CLOUDFLARE_WORKER_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messages,
+      model: "gpt-4o",
+      useWebSearch,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    const errorMessage =
+      errorData?.details?.error?.message ||
+      errorData?.details?.message ||
+      errorData?.error ||
+      "Failed to generate routine. Please check your API configuration.";
+    throw new Error(errorMessage);
+  }
+
+  const data = await response.json();
+  const assistantMessage =
+    data?.choices?.[0]?.message?.content || data?.content || data?.output_text;
+  const citations = data?.citations || [];
+
+  if (!assistantMessage) {
+    throw new Error("The worker returned an empty response.");
+  }
+
+  return {
+    content: assistantMessage,
+    citations,
+  };
 }
 
 /* Handle chat form submission for follow-up questions */
@@ -302,57 +494,50 @@ async function handleChatSubmission(userInput) {
 
   try {
     /* Call API with conversation history */
-    const response = await fetch(CONFIG.CLOUDFLARE_WORKER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messages: conversationHistory,
-        model: "gpt-4o",
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const errorMessage =
-        errorData?.details?.error?.message ||
-        errorData?.details?.message ||
-        errorData?.error ||
-        "API request failed";
-      throw new Error(errorMessage);
-    }
-
-    const data = await response.json();
-    const assistantMessage = data.choices[0].message.content;
+    const data = await sendChatRequest(
+      conversationHistory,
+      currentWebSearchEnabled,
+    );
+    const assistantMessage = data.content;
+    const citations = data.citations || [];
 
     conversationHistory.push({
       role: "assistant",
       content: assistantMessage,
     });
 
-    displayMessage("assistant", assistantMessage);
+    displayMessage("assistant", assistantMessage, citations);
   } catch (error) {
     console.error("Error in chat:", error);
     displayMessage(
       "assistant",
-      "I apologize, but I couldn't process your question. Please try again.",
+      error.message ||
+        "I apologize, but I couldn't process your question. Please try again.",
     );
   }
 }
 
-/* Filter and display products when category changes */
-categoryFilter.addEventListener("change", async (e) => {
-  const products = await loadProducts();
-  const selectedCategory = e.target.value;
+/* Filter and display products when category or search changes */
+categoryFilter.addEventListener("change", (e) => {
+  currentCategory = e.target.value;
+  refreshProducts();
+});
 
-  /* filter() creates a new array containing only products 
-     where the category matches what the user selected */
-  const filteredProducts = products.filter(
-    (product) => product.category === selectedCategory,
-  );
+productSearch.addEventListener("input", (e) => {
+  currentSearchQuery = e.target.value;
+  refreshProducts();
+});
 
-  displayProducts(filteredProducts);
+languageSelector.addEventListener("change", (e) => {
+  applyLanguage(e.target.value);
+  updateCategoryPlaceholder();
+  refreshProducts();
+  updateUI();
+});
+
+webSearchToggle.addEventListener("change", (e) => {
+  currentWebSearchEnabled = e.target.checked;
+  syncSystemPrompt();
 });
 
 /* Generate Routine button click handler */
@@ -387,6 +572,9 @@ productModal.addEventListener("click", (e) => {
 async function init() {
   await loadProducts();
   loadSelectedProducts();
+  applyLanguage(currentLanguage);
+  updateCategoryPlaceholder();
+  syncSystemPrompt();
   updateUI();
 }
 
