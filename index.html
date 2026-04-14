@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -41,6 +41,17 @@
 
       <!-- Products Grid -->
       <div id="productsContainer" class="products-grid"></div>
+
+      <!-- Product Description Modal -->
+      <div id="productModal" class="modal" style="display: none">
+        <div class="modal-content">
+          <button id="closeModal" class="modal-close">&times;</button>
+          <h3 id="modalProductName"></h3>
+          <p id="modalProductBrand" class="modal-brand"></p>
+          <p id="modalProductDescription"></p>
+          <button id="addFromModal" class="add-btn">Add to Selection</button>
+        </div>
+      </div>
 
       <!-- Selected Products -->
       <div class="selected-products">
@@ -86,7 +97,7 @@
     </div>
 
     <!-- secrets.js can be removed when using Cloudflare Workers for API requests -->
-    <script src="secrets.js"></script>
+    <script src="config.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

@@ -253,3 +253,269 @@ body {
 .generate-btn i {
   margin-right: 8px;
 }
+
+/* —— L'Oréal Brand Colors & Product Selection —— */
+
+/* Product card selected state */
+.product-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid #ccc;
+  position: relative;
+}
+
+.product-card:hover {
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.product-card.selected {
+  border-color: #ff003b;
+  background-color: #fff5f7;
+  box-shadow: 0 0 0 3px rgba(255, 0, 59, 0.1);
+}
+
+.product-card.selected::after {
+  content: "✓";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ff003b;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* Selected products items */
+.selected-item {
+  background: #e3a535;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.selected-item .remove-btn {
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: background 0.3s;
+}
+
+.selected-item .remove-btn:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* Clear all button */
+.clear-all-btn {
+  background: #ff003b;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  transition: background 0.3s;
+}
+
+.clear-all-btn:hover {
+  background: #cc002e;
+}
+
+/* Generate Routine button enhanced */
+.generate-btn {
+  background: #ff003b;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.generate-btn:hover {
+  background: #cc002e;
+}
+
+.generate-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* —— Modal Styles —— */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.3s;
+}
+
+.modal-close:hover {
+  color: #ff003b;
+}
+
+.modal-brand {
+  color: #e3a535;
+  font-weight: 600;
+  font-size: 14px;
+  margin: 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#modalProductDescription {
+  color: #555;
+  line-height: 1.7;
+  margin: 15px 0;
+  font-size: 16px;
+}
+
+.add-btn {
+  background: #e3a535;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 20px;
+  transition: background 0.3s;
+}
+
+.add-btn:hover {
+  background: #d1941f;
+}
+
+/* —— Chat Interface Enhancement —— */
+.chatbox {
+  border-color: #ff003b;
+  background: linear-gradient(135deg, #fff5f7 0%, #fffef5 100%);
+}
+
+.chatbox h2 {
+  color: #ff003b;
+  font-weight: 600;
+}
+
+.chat-form input::placeholder {
+  color: #999;
+}
+
+.chat-form button {
+  background: #ff003b;
+}
+
+.chat-form button:hover {
+  background: #cc002e;
+}
+
+.chat-form button:focus {
+  outline-color: #ff003b;
+}
+
+/* Chat message styles */
+.chat-message {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  max-width: 85%;
+}
+
+.chat-message.user {
+  background: #ff003b;
+  color: white;
+  margin-left: auto;
+  text-align: right;
+  border-bottom-right-radius: 2px;
+}
+
+.chat-message.assistant {
+  background: #f0f0f0;
+  color: #333;
+  margin-right: auto;
+  border-bottom-left-radius: 2px;
+}
+
+/* Category filter enhanced */
+.search-section select {
+  border-color: #ff003b;
+}
+
+.search-section select:focus {
+  border-color: #ff003b;
+  box-shadow: 0 0 0 3px rgba(255, 0, 59, 0.1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .product-card {
+    flex: 0 1 calc(50% - 10px);
+  }
+
+  .modal-content {
+    max-width: 90%;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-card {
+    flex: 0 1 100%;
+  }
+
+  .chat-message {
+    max-width: 100%;
+  }
+
+  .selected-item {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+}
